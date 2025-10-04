@@ -33,9 +33,10 @@ class AmountValidationMixin(BaseModel):
     @field_validator("amount")
     @classmethod
     def validate_amount(cls, v: Decimal) -> Decimal:
-        if v.quantize(Decimal("0.0001")) != v:
-            raise ValueError("Amount cannot have more than 4 decimal places")
-        return v
+            exp = v.as_tuple().exponent
+            if isinstance(exp, int) and exp < -4:
+                raise ValueError("Amount cannot have more than 4 decimal places")
+            return v
 
 
 class FundWalletRequest(AmountValidationMixin):
@@ -74,6 +75,5 @@ class TransferResponse(BaseModel):
     amount: Decimal
 
 class WalletListResponse(BaseModel):
-    """Response containing list of wallets"""
     wallets: list[WalletResponse]
     total: int

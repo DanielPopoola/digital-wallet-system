@@ -29,25 +29,19 @@ class WalletFundedEvent(WalletEventBase):
     new_balance: Decimal
 
 
-class TransferCompletedEvent(BaseModel):
+class TransferCompletedEvent(WalletEventBase):
     event_type: EventType = EventType.TRANSFER_COMPLETED
-    from_wallet_id: str
     to_wallet_id: str
-    from_user_id: str
     to_user_id: str
     amount: Decimal
-    from_transaction_id: str
     to_transaction_id: str
-    timestamp: datetime = Field(default_factory=datetime.now)
 
 
-class TransferFailedEvent(BaseModel):
+class TransferFailedEvent(WalletEventBase):
     event_type: EventType = EventType.TRANSFER_FAILED
-    from_wallet_id: str
     to_wallet_id: str
     amount: Decimal
     reason: str
-    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 WalletEvent = WalletCreatedEvent | WalletFundedEvent | TransferCompletedEvent | TransferFailedEvent
