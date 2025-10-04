@@ -13,13 +13,6 @@ dependencies = [
     "sqlalchemy>=2.0.43",
 ]
 
-[tool.ruff.lint]
-ignore = [
-  "UP006",
-  "UP007",
-  "UP035",
-]
-
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
