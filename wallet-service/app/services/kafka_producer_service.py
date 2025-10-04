@@ -5,7 +5,7 @@ from typing import Optional
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
 from app.config import get_settings
-from app.schemas import WalletEvent
+from app.schemas import WalletEvent, TransferCompletedEvent, TransferFailedEvent
 
 
 logger = logging.getLogger(__name__)
@@ -46,13 +46,15 @@ class KafkaProducerService:
 
         try:
             event_dict = event.model_dump(mode='json')
-            await self.producer.send_and_wait(
-                self.topic,
-                value=event_dict,
-                key=event.wallet_id.encode('utf-8')  # Use wallet_id as key for partitioning
-            )
+            if isinstance(event, (TransferCompletedEvent, TransferFailedEvent)):
+                keys = [event.from_wallet_id.encode("utf-8"), event.to_wallet_id.encode("utf-8")]
+            else:
+                keys = [event.wallet_id.encode("utf-8")]
 
-            logger.info(f"Published event: {event.event_type} for wallet {event.wallet_id}")
+            for key in keys:
+                await self.producer.send_and_wait(self.topic, value=event_dict, key=key)
+
+            logger.info(f"Published event: {event.event_type} for wallet {keys}")
             return True
         except KafkaError as e:
             logger.error(f"Kafka error publishing event: {e}")
