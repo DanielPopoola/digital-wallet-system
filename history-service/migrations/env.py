@@ -1,6 +1,6 @@
 from app.database import Base
 from app.config import get_settings
-
+from app.models import TransactionEvent
 
 import os
 import sys
@@ -11,12 +11,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from dotenv import load_dotenv
 load_dotenv("../.env.local")
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -50,9 +48,8 @@ def include_object(object, name, type_, reflected, compare_to):
     """
     if type_ == "table":
         # Only manage tables defined in our models
-        return name in ["wallets", "wallet_transactions"]
+        return name in ["transaction_events"]
     return True
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -72,8 +69,8 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table="alembic_version_wallet",
-        include_object=include_object,
+        version_table="alembic_version_history",
+        include_object=include_object
     )
 
     with context.begin_transaction():
@@ -97,7 +94,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table="alembic_version_wallet",
+            version_table="alembic_version_history",
             include_object=include_object,
         )
 

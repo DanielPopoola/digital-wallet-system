@@ -14,10 +14,9 @@ class TransactionEvent(Base):
     amount = Column(DECIMAL(19,4), nullable=False)
     event_type = Column(String(30), nullable=False)
     transaction_id = Column(String(36), nullable=False,unique=True)
+    event_data = Column(JSONB)
 
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-
-    event_data = Column(JSONB)
 
     __table_args__ = (
         Index('idx_transaction_event_wallet_id', 'wallet_id'),
