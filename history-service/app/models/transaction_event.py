@@ -13,7 +13,7 @@ class TransactionEvent(Base):
     user_id = Column(String(100), nullable=False)
     amount = Column(DECIMAL(19,4), nullable=False)
     event_type = Column(String(30), nullable=False)
-    transaction_id = Column(String(36), nullable=False,unique=True)
+    transaction_id = Column(String(150), nullable=False,unique=True)
     event_data = Column(JSONB)
 
     created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
