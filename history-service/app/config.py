@@ -11,8 +11,6 @@ class Settings(BaseSettings):
 
     kafka_broker: str
     kafka_topic: str = "wallet_events"
-    consumer_group: str = "history-service"
-    batch_size: int = 100
 
     app_name: str = "History Service"
     debug: bool = True

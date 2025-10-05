@@ -4,6 +4,8 @@ import logging
 from typing import Optional
 from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
+
+
 from app.config import get_settings
 from app.schemas import WalletEvent, TransferCompletedEvent, TransferFailedEvent
 
