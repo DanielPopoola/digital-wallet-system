@@ -157,6 +157,7 @@ class WalletService:
             if from_wallet.balance < request.amount:
                 event = TransferFailedEvent(
                     from_wallet_id=from_wallet_id,
+                    from_user_id=from_wallet.user_id,
                     to_wallet_id=to_wallet_id,
                     amount=request.amount,
                     reason="Insufficient balance"
