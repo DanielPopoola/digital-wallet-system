@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import signal
 from contextlib import contextmanager
 from typing import Optional
 from aiokafka import AIOKafkaConsumer
@@ -35,16 +34,6 @@ def get_db_context():
     finally:
         db.close()
 
-shutdown_requested = False
-
-def handle_shutdown_signal(signum, frame):
-    global shutdown_requested
-    logger.info(f"Received signal {signum}, will shutdown after current message...")
-    shutdown_requested = True
-
-signal.signal(signal.SIGTERM, handle_shutdown_signal)
-signal.signal(signal.SIGINT, handle_shutdown_signal)
-
 def deserialize_event(event_dict: dict) -> Optional[WalletEvent]:
     try:
         event_type = event_dict.get('event_type')
@@ -76,6 +65,11 @@ class KafkaConsumerService:
         self.topic = settings.kafka_topic
         self.group_id = "history-service-group"
         self.consumer: Optional[AIOKafkaConsumer] = None
+        self._shutdown = False
+
+    def request_shutdown(self):
+        logger.info("Shutdown requested for Kafka consumer")
+        self._shutdown = True
 
     async def start(self):
         for attempt in range(5):
@@ -111,7 +105,7 @@ class KafkaConsumerService:
 
         try:
             async for message in self.consumer:
-                if shutdown_requested:
+                if self._shutdown:
                     logger.info("Shutdown requested, stopping consumption...")
                     break
 
@@ -132,7 +126,7 @@ class KafkaConsumerService:
                     await self.consumer.commit()
 
                 except Exception as e:
-                    logger.error(f"Error processing message: {e}, " exc_info=True)
+                    logger.error(f"Error processing message: {e}", exc_info=True)
                     await asyncio.sleep(5)
 
         except Exception as e:

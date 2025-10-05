@@ -94,7 +94,7 @@ class HistoryService:
             
             elif isinstance(event, TransferFailedEvent):
                 # Store with synthetic ID
-                synthetic_txn_id = f"failed-{event.timestamp.isoformat()}-{event.from_wallet_id}"
+                synthetic_txn_id = event.transaction_id or f"failed-{event.timestamp.isoformat()}-{event.from_wallet_id}"
                 
                 if self.repository.event_exists(synthetic_txn_id):
                     logger.info(f"Failed transfer already logged: {synthetic_txn_id}")

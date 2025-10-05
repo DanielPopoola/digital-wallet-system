@@ -47,7 +47,7 @@ class TransferFailedEvent(BaseModel):
     to_wallet_id: str
     amount: Decimal
     reason: str
-    transaction_id: str
+    transaction_id: str | None = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
