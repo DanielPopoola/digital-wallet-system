@@ -1,37 +1,55 @@
-# Digital Wallet Transaction System
+# Digital Wallet System
 
-## What you'll build
-
-A simple digital wallet system that shows how PostgreSQL and Kafka work together. Users can create wallets, add money, and transfer funds. The transaction history is created through Kafka events.
-
-**What you'll learn**: PostgreSQL transactions, Kafka producer/consumer patterns, eventual consistency
-**Setup**: Two Spring Boot apps sharing one PostgreSQL database
+This project is a simple digital wallet system built with Python, FastAPI, and Kafka. It demonstrates a microservices architecture where a `Wallet Service` handles core financial transactions and a `History Service` provides an audit trail through event-sourcing. The system is designed to showcase patterns for handling data consistency and resilience in a distributed environment.
 
 ## Architecture
 
-Here's what you're building:
+The system is composed of two main services that communicate asynchronously via a Kafka message broker, while sharing a PostgreSQL database.
 
 ```plaintext
-┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│  Wallet Service │───▶│    Kafka     │───▶│ History Service │
-│ (Spring Boot)   │    │              │    │ (Spring Boot)   │
-└─────────────────┘    │wallet_events │    └─────────────────┘
-         │             └──────────────┘             │
-         └──────────────────────────────────────────┘
+┌──────────────────┐      ┌──────────────┐      ┌──────────────────┐
+│  Wallet Service  │─────▶│    Kafka     │─────▶│ History Service  │
+│ (FastAPI/Python) │      │              │      │ (FastAPI/Python) │
+└──────────────────┘      │wallet_events │      └──────────────────┘
+         │                └──────────────┘                │
+         └────────────────────────────────────────────────┘
                    Shared PostgreSQL Database
 ```
 
-**The flow:**
+1.  **Wallet Service**: The primary service that handles synchronous operations like creating wallets, funding, and transfers. It ensures immediate data consistency in the database for critical financial data and publishes events to Kafka upon success.
+2.  **History Service**: Consumes events from Kafka to build a complete, event-sourced audit trail of all transactions. This provides a queryable history that is eventually consistent with the main wallet data.
 
-1. Client hits Wallet Service API
-2. Wallet Service updates database immediately
-3. Wallet Service publishes event to Kafka
-4. History Service consumes event and updates history
-5. Client can query history from History Service
+## Core Features
 
-## Process Flow
+-   Create and manage digital wallets for users.
+-   Fund wallets using **optimistic locking** to prevent race conditions during concurrent updates.
+-   Transfer funds between wallets using **pessimistic locking** for atomicity.
+-   Publish events to Kafka for every transaction (create, fund, transfer).
+-   Provide a complete, event-sourced transaction history for any wallet or user.
+-   Handle idempotent event processing to prevent duplicate history entries.
 
-### How Money Moves Through the System
+## Technology Stack
+
+-   **Backend**: Python 3.11+ with [FastAPI](https://fastapi.tiangolo.com/)
+-   **Database**: PostgreSQL with [SQLAlchemy](https://www.sqlalchemy.org/) for ORM
+-   **Messaging**: Apache Kafka via [aiokafka](https://github.com/aio-libs/aiokafka)
+-   **Infrastructure**: Docker Compose
+
+## Key Concepts Implemented
+
+This project serves as a practical demonstration of several key patterns used in distributed systems:
+
+-   **Eventual Consistency**: The transaction history in the `History Service` becomes consistent with the `Wallet Service` only after the Kafka event has been successfully processed.
+-   **Event Sourcing (simplified)**: The `History Service` builds its state entirely from the stream of events produced by the `Wallet Service`, providing a verifiable audit log.
+-   **Optimistic Locking**: To handle concurrent funding requests safely, the `wallets` table uses a `version` column. An update will only succeed if the version has not changed, preventing lost updates.
+-   **Pessimistic Locking**: For critical, multi-row operations like fund transfers, the system uses `SELECT ... FOR UPDATE` to lock the involved wallet rows in the database. This ensures the transfer is atomic and avoids deadlocks by locking rows in a consistent order.
+-   **Idempotent Consumers**: The `History Service` is designed to handle duplicate Kafka events gracefully, ensuring that a single transaction is never recorded more than once, even if the event is delivered multiple times.
+
+## Process Flows
+
+### Synchronous vs. Asynchronous Operations
+
+The system clearly separates immediate, synchronous actions from eventual, asynchronous ones.
 
 ```plaintext
                     ┌─────────────────────────────────────────┐
@@ -76,7 +94,7 @@ Here's what you're building:
                     └─────────────────────────────────────────┘
 ```
 
-### Example: Transfer Transaction
+### Transfer Transaction Example
 
 ```plaintext
 Before Transfer:
@@ -110,159 +128,17 @@ After Transfer:
                         └─────────────────┘
 ```
 
-## What each service does
+## API Endpoints
 
 ### Wallet Service
 
-Handles the money stuff:
-
-- Create wallets for users
-- Add funds to wallets
-- Transfer money between wallets
-- Publish events when things happen
-
-### History Service
-
-Builds the audit trail:
-
-- Listen for wallet events from Kafka
-- Store transaction history
-- Provide history APIs
-- Handle duplicate events gracefully
-
-## Database design
-
-One PostgreSQL database, three tables:
-
-```sql
--- Wallet Service owns these
-wallets (
-    id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(100) NOT NULL,
-    balance DECIMAL(19,4) NOT NULL DEFAULT 0,
-    version BIGINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-wallet_transactions (
-    id VARCHAR(36) PRIMARY KEY,
-    wallet_id VARCHAR(36) NOT NULL,
-    amount DECIMAL(19,4) NOT NULL,
-    type VARCHAR(20) NOT NULL, -- 'FUND', 'TRANSFER_OUT', 'TRANSFER_IN'
-    status VARCHAR(20) NOT NULL, -- 'COMPLETED', 'FAILED'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (wallet_id) REFERENCES wallets(id)
-);
-
--- History Service owns this
-transaction_events (
-    id VARCHAR(36) PRIMARY KEY,
-    wallet_id VARCHAR(36) NOT NULL,
-    user_id VARCHAR(100) NOT NULL,
-    amount DECIMAL(19,4) NOT NULL,
-    event_type VARCHAR(30) NOT NULL,
-    transaction_id VARCHAR(36),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    event_data JSONB
-);
-```
-
-## API endpoints
-
-### Wallet Service
-
-- `POST /wallets` - Create wallet for userId
-- `POST /wallets/{walletId}/fund` - Add money
-- `POST /wallets/{walletId}/transfer` - Send money to another wallet
-- `GET /wallets/{walletId}` - Check balance
-- `GET /users/{userId}/wallets` - List user's wallets
+-   `POST /wallets` - Create a new wallet for a user.
+-   `POST /wallets/{wallet_id}/fund` - Add funds to a wallet.
+-   `POST /wallets/{wallet_id}/transfer` - Transfer funds to another wallet.
+-   `GET /wallets/{wallet_id}` - Get wallet details and balance.
+-   `GET /users/{user_id}/wallets` - List all wallets for a specific user.
 
 ### History Service
 
-- `GET /wallets/{walletId}/history` - Transaction history
-- `GET /users/{userId}/activity` - All user activity
-
-## What you'll actually implement
-
-### Core operations
-
-1. **Create wallet** - Insert into PostgreSQL + publish event
-2. **Fund wallet** - Update balance with optimistic locking + publish event
-3. **Transfer money** - Update two wallets + publish event
-4. **Consume events** - Process Kafka events into history table
-5. **Query history** - Read from event-sourced history
-
-### Key learning scenarios
-
-**PostgreSQL stuff:**
-
-- Handle concurrent balance updates without race conditions
-- Use `DECIMAL` for money (never floats!)
-- Manage transactions that span database + Kafka operations
-- Implement optimistic locking with version fields
-
-**Kafka stuff:**
-
-- Configure producers to handle failures
-- Set up consumer groups properly
-- Handle duplicate messages
-- Design event schemas that won't break
-
-**Integration patterns:**
-
-- Deal with eventual consistency
-- Handle cases where Kafka is down but PostgreSQL works
-- Retry failed operations
-- Correlate events across services
-
-## Business rules
-
-Keep it simple:
-
-- Users are just string IDs (no need for authentication)
-- Balances can't go negative
-- Use 4 decimal places for money amounts
-- Balance updates happen immediately
-- History updates happen eventually
-- Everything must be auditable
-
-## Event design
-
-Events look like this:
-
-```json
-{
-  "eventType": "WALLET_FUNDED",
-  "walletId": "wallet-123",
-  "userId": "user-456",
-  "amount": "100.00",
-  "transactionId": "txn-789",
-  "timestamp": "2025-08-19T10:30:00Z"
-}
-```
-
-**Event types:**
-
-- `WALLET_CREATED`
-- `WALLET_FUNDED`
-- `TRANSFER_COMPLETED`
-- `TRANSFER_FAILED`
-
-## Tech stack
-
-- **Backend**: Java + Spring Boot
-- **Database**: PostgreSQL + Spring Data JPA
-- **Messaging**: Apache Kafka
-- **Infrastructure**: Docker Compose
-- **Testing**: Integration tests that span both services
-
-## Success criteria
-
-- You can fund wallets concurrently without losing money
-- Events flow reliably from Wallet Service to History Service
-- History eventually catches up even when services restart
-- You understand why optimistic locking matters for financial data
-- You can explain the trade-offs of eventual consistency
-
-The goal isn't production-ready code. It's understanding how PostgreSQL transactions and Kafka events work together in real distributed systems.
+-   `GET /history/wallets/{wallet_id}` - Get the full transaction history for a wallet.
+-   `GET /history/users/{user_id}` - Get all activity for a user across all their wallets.
