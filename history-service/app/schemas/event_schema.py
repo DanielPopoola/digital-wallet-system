@@ -43,9 +43,11 @@ class TransferCompletedEvent(BaseModel):
 class TransferFailedEvent(BaseModel):
     event_type: EventType = EventType.TRANSFER_FAILED
     from_wallet_id: str
+    from_user_id: str
     to_wallet_id: str
     amount: Decimal
     reason: str
+    transaction_id: str
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
