@@ -5,4 +5,4 @@ HISTORY_SERVICE_URL = "http://localhost:8001"
 DEFAULT_TIMEOUT = 10
 
 # How often to check if history updated
-POLL_INTERVAL = 0.5
+POLL_INTERVAL = 1

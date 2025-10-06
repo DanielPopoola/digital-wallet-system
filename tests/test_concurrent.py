@@ -215,56 +215,38 @@ class TestHighLoad:
 
         # Each wallet: 1 creation + num_operations_per_wallet fundings
         expected_events_per_wallet = 1 + num_operations_per_wallet
-        total_expected_events = num_wallets * expected_events_per_wallet
-        print(f"  Expected: {total_expected_events} total events")
 
-        max_wait_time = 120
-        start_wait = time.time()
-        last_count = 0
-        
-        while time.time() - start_wait < max_wait_time:
+        all_histories_synced = False
+        for _ in range(30):
             try:
-                response = requests.get(
-                    f"{HISTORY_SERVICE_URL}/history/users/{unique_user_id}"
-                )
-                if response.status_code == 200:
-                    activity = response.json()
-                    actual_count = len(activity.get("events", []))
-
-                    if actual_count != last_count:
-                        print(f"  → Progress: {actual_count}/{total_expected_events} events")
-                        last_count = actual_count
-                    
-                    if actual_count >= total_expected_events:
-                        print(f"  ✓ All events synced!")
-                        break
-
+                for wallet_id in wallet_ids:
+                    wait_for_history_events(
+                        wallet_id,
+                        expected_count=expected_events_per_wallet,
+                        timeout=2
+                    )
+                all_histories_synced = True
+                break
+            except TimeoutError:
                 time.sleep(1)
-            except requests.RequestException:
-                time.sleep(1)
-        else:
-            activity = requests.get(
-                f"{HISTORY_SERVICE_URL}/history/users/{unique_user_id}"
-            ).json()
-            actual_count = len(activity.get("events", []))
-
-            pytest.fail(
-                f"History didn't catch up in time!\n"
-                f"Expected: {total_expected_events} events\n"
-                f"Got: {actual_count} events\n"
-                f"Missing: {total_expected_events - actual_count} events\n"
-                f"This suggests Kafka consumer is slow or events were lost."
-            )
-
-        activity = requests.get(
-            f"{HISTORY_SERVICE_URL}/history/users/{unique_user_id}"
-        ).json()
+                continue
+        
+        assert all_histories_synced, "History didn't catch up within timeout"
+        
+        # ASSERT - Total events in user activity
+        total_expected_events = num_wallets * expected_events_per_wallet
+        
+        activity = wait_for_user_activity(
+            unique_user_id,
+            expected_count=total_expected_events,
+            timeout=30
+        )
+        
         actual_event_count = len(activity["events"])
         
-        assert actual_event_count >= total_expected_events
-
-
-@pytest.mark.concurrent
+        assert actual_event_count == total_expected_events, (
+            f"Expected {total_expected_events} total events, got {actual_event_count}"
+        )
 class TestRetryMechanism:
 
     def test_optimstic_lock_retries_succeed(self, test_wallet):

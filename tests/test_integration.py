@@ -3,7 +3,7 @@ import requests
 from decimal import Decimal
 
 
-from tests.constants import WALLET_SERVICE_URL, HISTORY_SERVICE_URL
+from tests.constants import WALLET_SERVICE_URL
 from tests.utils import (
     create_test_wallet, 
     fund_wallet,

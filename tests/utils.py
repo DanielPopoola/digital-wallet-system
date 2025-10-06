@@ -40,7 +40,8 @@ def wait_for_user_activity(user_id: str, expected_count: int, timeout: int = DEF
 
     while time.time() - start_time < timeout:
         try:
-            response = requests.get(f"{HISTORY_SERVICE_URL}/history/users/{user_id}")
+            response = requests.get(f"{HISTORY_SERVICE_URL}/history/users/{user_id}",
+                                    params={"limit":expected_count})
             if response.status_code == 200:
                 activity = response.json()
                 events = activity.get("events", [])
