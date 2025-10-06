@@ -51,7 +51,7 @@ def wait_for_user_activity(user_id: str, expected_count: int, timeout: int = DEF
                 
             time.sleep(POLL_INTERVAL)
 
-        except requests.RequestException as e:
+        except requests.RequestException:
             time.sleep(POLL_INTERVAL)
 
     raise TimeoutError(

@@ -1,11 +1,9 @@
 import pytest
-import requests
 import time
 from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Tuple
 
-from tests.constants import HISTORY_SERVICE_URL
 from tests.utils import (
     create_test_wallet, 
     fund_wallet,
@@ -91,7 +89,7 @@ class TestConcurrentFunding:
             try:
                 fund_wallet(wallet_id, amount)
                 return (amount, True)
-            except Exception as e:
+            except Exception:
                 return (amount, False)
         
         with ThreadPoolExecutor(max_workers=len(amounts)) as executor:
@@ -154,7 +152,7 @@ class TestConcurrentTransfers:
             results = [f.result() for f in as_completed(futures)]
         
         successes = [(i, msg) for i, success, msg in results if success]
-        failures = [(i, msg) for i, success, msg in results if not success]
+        _ = [(i, msg) for i, success, msg in results if not success]
 
         # Should have ~6 successes (maybe 5-7 depending on timing)
         # The key is: NO OVERDRAFT
@@ -190,7 +188,7 @@ class TestHighLoad:
                 amount = Decimal(str(10 + op_idx))
                 fund_wallet(wallet_id, amount)
                 return (op_idx, True)
-            except Exception as e:
+            except Exception:
                 return (op_idx, False)
             
         with ThreadPoolExecutor(max_workers=20) as executor:
@@ -257,15 +255,12 @@ class TestRetryMechanism:
         amount = Decimal("5.00")
         expected_total = num_threads * amount
         
-        
-        retry_counts = []
-        
         def fund_and_track_retries(thread_id: int) -> Tuple[int, bool, int]:
             """Fund and track how many retries were needed."""
             try:
                 fund_wallet(wallet_id, amount)
                 return (thread_id, True, 0)
-            except Exception as e:
+            except Exception:
                 return (thread_id, False, 0)
         
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
