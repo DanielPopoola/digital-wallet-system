@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from decimal import Decimal
-from datetime import datetime
-from typing import List, Any
+from typing import List
 
 
 class TransactionEventResponse(BaseModel):
