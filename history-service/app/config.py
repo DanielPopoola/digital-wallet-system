@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     kafka_broker: str
     kafka_topic: str = "wallet_events"
+    kafka_consumer_group: str = "history-service-group"
 
     app_name: str = "History Service"
     debug: bool = True

@@ -63,7 +63,7 @@ class KafkaConsumerService:
     def __init__(self):
         self.bootstrap_servers = settings.kafka_broker
         self.topic = settings.kafka_topic
-        self.group_id = "history-service-group"
+        self.group_id = settings.kafka_consumer_group
         self.consumer: Optional[AIOKafkaConsumer] = None
         self._shutdown = False
 
