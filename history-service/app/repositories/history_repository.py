@@ -33,22 +33,25 @@ class HistoryRepository:
             TransactionEvent.transaction_id.in_(transaction_ids)
         ).first() is not None
     
-    def get_wallet_history(self, wallet_id: str, limit: int = 50, offset: int = 0) -> List[TransactionEvent]:
-        return (
-            self.db.query(TransactionEvent)
-            .filter(TransactionEvent.wallet_id == wallet_id)
-            .order_by(TransactionEvent.created_at.desc())
+    def get_wallet_history(self, wallet_id: str, limit: int = 50, offset: int = 0) -> tuple[List[TransactionEvent], int]:
+        query = self.db.query(TransactionEvent).filter(TransactionEvent.wallet_id == wallet_id)
+        total = query.count()
+        events = (
+            query.order_by(TransactionEvent.created_at.desc())
             .limit(limit)
             .offset(offset)
             .all()
         )
+        return events, total
+        
 
-    def get_user_activity(self, user_id: str, limit: int = 50, offset: int = 0) -> List[TransactionEvent]:
-        return (
-            self.db.query(TransactionEvent)
-            .filter(TransactionEvent.user_id == user_id)
-            .order_by(TransactionEvent.created_at.desc())
+    def get_user_activity(self, user_id: str, limit: int = 50, offset: int = 0) -> tuple[List[TransactionEvent], int]:
+        query = self.db.query(TransactionEvent).filter(TransactionEvent.user_id == user_id)
+        total = query.count()
+        events = (
+            query.order_by(TransactionEvent.created_at.desc())
             .limit(limit)
             .offset(offset)
             .all()
         )
+        return events, total

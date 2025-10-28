@@ -128,15 +128,15 @@ class HistoryService:
         wallet_id: str, 
         limit: int = 50, 
         offset: int = 0
-    ) -> List[TransactionEventResponse]:
-        events = self.repository.get_wallet_history(wallet_id, limit, offset)
-        return [TransactionEventResponse.model_validate(event) for event in events]
+    ) -> tuple[List[TransactionEventResponse], int]:
+        events, total = self.repository.get_wallet_history(wallet_id, limit, offset)
+        return [TransactionEventResponse.model_validate(event) for event in events], total
     
     def get_user_activity(
         self,
         user_id: str,
         limit: int = 50,
         offset: int = 0
-    ) -> List[TransactionEventResponse]:
-        events = self.repository.get_user_activity(user_id, limit, offset)
-        return [TransactionEventResponse.model_validate(event) for event in events]
+    ) -> tuple[List[TransactionEventResponse], int]:
+        events, total = self.repository.get_user_activity(user_id, limit, offset)
+        return [TransactionEventResponse.model_validate(event) for event in events], total

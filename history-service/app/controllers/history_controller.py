@@ -15,12 +15,12 @@ async def get_wallet_history(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0)
 ):
-    events = service.get_wallet_history(wallet_id, limit, offset)
+    events, total  = service.get_wallet_history(wallet_id, limit, offset)
     
     return WalletHistoryResponse(
         wallet_id=wallet_id,
         events=events,
-        total=len(events),
+        total=total,
         limit=limit,
         offset=offset
     )
@@ -33,12 +33,12 @@ async def get_user_activity(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
-    events = service.get_user_activity(user_id, limit, offset)
+    events, total = service.get_user_activity(user_id, limit, offset)
     
     return UserActivityResponse(
         user_id=user_id,
         events=events,
-        total=len(events),
+        total=total,
         limit=limit,
         offset=offset,
     )
