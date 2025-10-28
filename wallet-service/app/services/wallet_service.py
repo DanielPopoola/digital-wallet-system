@@ -65,10 +65,7 @@ class WalletService:
                 transaction_id=transaction.id,
                 initial_balance=wallet.balance
             )
-            published = await kafka_producer.publish_event(event)
-            if not published:
-                self.db.rollback()
-                raise Exception("Failed to publish event")
+            await kafka_producer.publish_event(event)
 
             return WalletResponse.model_validate(wallet)
         except IntegrityError as e:
