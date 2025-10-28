@@ -3,15 +3,14 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.repositories import HistoryRepository
-from app.schemas import (
+from shared.schemas import (
     WalletEvent,
     WalletCreatedEvent,
     WalletFundedEvent,
     TransferCompletedEvent,
-    TransferFailedEvent,
-    TransactionEventResponse
+    TransferFailedEvent
 )
-
+from app.schemas import TransactionEventResponse
 
 logger = logging.getLogger(__name__)
 

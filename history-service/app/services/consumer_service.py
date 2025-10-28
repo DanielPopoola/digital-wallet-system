@@ -9,7 +9,7 @@ from aiokafka import AIOKafkaConsumer
 from app.config import get_settings
 from app.database import SessionLocal
 from app.services.history_service import HistoryService
-from app.schemas import (
+from shared.schemas import (
     EventType,
     WalletCreatedEvent,
     WalletFundedEvent,

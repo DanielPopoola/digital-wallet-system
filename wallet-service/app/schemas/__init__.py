@@ -10,14 +10,7 @@ from app.schemas.wallet_schema import (
     TransactionStatusEnum,
 )
 
-from app.schemas.event_schema import (
-    EventType,
-    WalletCreatedEvent,
-    WalletFundedEvent,
-    TransferCompletedEvent,
-    TransferFailedEvent,
-    WalletEvent,
-)
+
 
 __all__ = [
     "CreateWalletRequest",
@@ -29,10 +22,4 @@ __all__ = [
     "WalletListResponse",
     "TransactionTypeEnum",
     "TransactionStatusEnum",
-    "EventType",
-    "WalletCreatedEvent",
-    "WalletFundedEvent",
-    "TransferCompletedEvent",
-    "TransferFailedEvent",
-    "WalletEvent",
 ]

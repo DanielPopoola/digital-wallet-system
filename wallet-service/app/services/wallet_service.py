@@ -5,16 +5,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.repositories import WalletRepository
+from shared.schemas import (
+    WalletCreatedEvent,
+    WalletFundedEvent,
+    TransferCompletedEvent,
+    TransferFailedEvent
+)
 from app.schemas import (
     CreateWalletRequest,
     FundWalletRequest,
     TransferRequest,
     WalletResponse,
-    TransferResponse,
-    WalletCreatedEvent,
-    WalletFundedEvent,
-    TransferCompletedEvent,
-    TransferFailedEvent,
+    TransferResponse
 )
 from app.models import TransactionType, TransactionStatus
 from app.services.kafka_producer_service import kafka_producer

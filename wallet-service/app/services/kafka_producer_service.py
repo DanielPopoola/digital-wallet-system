@@ -7,7 +7,7 @@ from aiokafka.errors import KafkaError
 
 
 from app.config import get_settings
-from app.schemas import WalletEvent, TransferCompletedEvent, TransferFailedEvent
+from shared.schemas import WalletEvent, TransferCompletedEvent, TransferFailedEvent
 
 
 logger = logging.getLogger(__name__)
