@@ -18,9 +18,5 @@ class Wallet(Base):
 
     transactions = relationship("WalletTransaction", back_populates="wallet", lazy="select")
 
-    __table_args__ = (
-        Index('idx_wallet_user_id', 'user_id'),
-    )
-
     def __repr__(self):
         return f"<Wallet(id={self.id}, user_id={self.user_id}, balance={self.balance})>"
