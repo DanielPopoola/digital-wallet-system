@@ -69,6 +69,7 @@ jobs:
         POSTGRES_DB: testdb
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
+        KAFKA_BROKER: localhost:9092
       run: |
         cd wallet-service
         source ../.venv/bin/activate
@@ -82,6 +83,7 @@ jobs:
         POSTGRES_DB: testdb
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
+        KAFKA_BROKER: localhost:9092
       run: |
         cd history-service
         source ../.venv/bin/activate
