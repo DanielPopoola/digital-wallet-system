@@ -101,9 +101,11 @@ jobs:
         PYTHONPATH: .
       run: |
         cd wallet-service
+        source ../.venv/bin/activate
         uvicorn app.main:app --host 0.0.0.0 --port 8001 &
         cd ..
         cd history-service
+        source ../.venv/bin/activate
         uvicorn app.main:app --host 0.0.0.0 --port 8002 &
         cd ..
         sleep 10 # Give services time to start
@@ -118,4 +120,6 @@ jobs:
         KAFKA_BROKER: localhost:9092
         WALLET_SERVICE_URL: http://localhost:8001
         HISTORY_SERVICE_URL: http://localhost:8002
-      run: pytest
+      run:
+        source .venv/bin/activate
+        uv pytest tests/
