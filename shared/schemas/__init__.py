@@ -1,4 +1,4 @@
-from event_schema import (
+from .event_schema import (
     EventType,
     WalletCreatedEvent,
     WalletFundedEvent,
