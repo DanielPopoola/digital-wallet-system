@@ -1,4 +1,5 @@
 from app.database import Base
+from app.models import transaction_event
 from app.config import get_settings
 
 

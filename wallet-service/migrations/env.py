@@ -1,4 +1,5 @@
 from app.database import Base
+from app.models import wallet, wallet_transaction
 from app.config import get_settings
 
 import os
