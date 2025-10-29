@@ -1,6 +1,9 @@
 import logging
 from sqlalchemy.exc import IntegrityError
 
+
+from app.exceptions import OptimisticLockError
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,13 +17,13 @@ def db_transaction(func):
             raise
     return wrapper
 
-def retry_optimistic_update(entity_id: str, update_fn, db, retries: int = 3):
+def retry_optimistic_update(entity_id: str, update_fn, db, retries: int = 5):
     for attempt in range(1, retries + 1):
         if update_fn():
             return
         logger.warning(f"Optimistic lock failed for {entity_id}, retry {attempt}/{retries}")
         db.rollback()
-    raise Exception(f"Failed to update {entity_id} after {retries} retries")
+    raise OptimisticLockError(f"Failed to update {entity_id} after {retries} retries")
 
 def commit_and_refresh(db, entity):
     db.commit()

@@ -20,18 +20,9 @@ from app.schemas import (
 from app.models import TransactionType, TransactionStatus
 from app.services.kafka_producer_service import kafka_producer
 from app.services.utils import db_transaction, retry_optimistic_update, commit_and_refresh
+from app.exceptions import InsufficientBalanceError, WalletNotFoundError
 
 logger = logging.getLogger(__name__)
-
-
-class InsufficientBalanceError(Exception):
-    pass
-
-class WalletNotFoundError(Exception):
-    pass
-
-class OptimisticLockError(Exception):
-    pass
 
 
 class WalletService:

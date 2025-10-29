@@ -1,4 +1,4 @@
-from app.services import WalletNotFoundError, InsufficientBalanceError, OptimisticLockError
+from app.exceptions import WalletNotFoundError, InsufficientBalanceError, OptimisticLockError
 from app.services import kafka_producer
 from app.controllers import wallet_router, user_router
 
