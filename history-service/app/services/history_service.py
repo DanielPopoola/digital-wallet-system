@@ -31,8 +31,8 @@ class HistoryService:
         )
 
     def _exists(self, ids):
-        if isinstance(ids, list):
-            return self.repository.events_exist(ids)
+        if not isinstance(ids, list):
+            ids = [ids]
         return self.repository.events_exist(ids)
 
     def process_event(self, event: WalletEvent) -> bool:
