@@ -71,6 +71,7 @@ jobs:
         POSTGRES_PORT: 5432
       run: |
         cd wallet-service
+        source ../.venv/bin/activate
         alembic upgrade head
         cd ..
 
@@ -83,6 +84,7 @@ jobs:
         POSTGRES_PORT: 5432
       run: |
         cd history-service
+        source ../.venv/bin/activate
         alembic upgrade head
         cd ..
 
