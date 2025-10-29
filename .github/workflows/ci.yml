@@ -102,11 +102,11 @@ jobs:
       run: |
         cd wallet-service
         source ../.venv/bin/activate
-        uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+        PYTHONPATH=.. uvicorn app.main:app --host 0.0.0.0 --port 8001 &
         cd ..
         cd history-service
         source ../.venv/bin/activate
-        uvicorn app.main:app --host 0.0.0.0 --port 8002 &
+        PYTHONPATH=.. uvicorn app.main:app --host 0.0.0.0 --port 8002 &
         cd ..
         sleep 10 # Give services time to start
 
