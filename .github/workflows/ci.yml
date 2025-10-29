@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      zookeeper:
+        image: confluentinc/cp-zookeeper:7.5.0
+        ports:
+          - "2181:2181"
+        environment:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+      kafka:
+        image: confluentinc/cp-kafka:7.5.0
+        ports:
+          - "9092:9092"
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    - name: Install dependencies
+      run: |
+        ~/.cargo/bin/uv pip install -r requirements.txt
+        ~/.cargo/bin/uv pip install -e ./shared
+
+    - name: Run wallet-service migrations
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpassword
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: |
+        cd wallet-service
+        alembic upgrade head
+        cd ..
+
+    - name: Run history-service migrations
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpassword
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: |
+        cd history-service
+        alembic upgrade head
+        cd ..
+
+    - name: Start services
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpassword
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        KAFKA_BROKER: localhost:9092
+        PYTHONPATH: .
+      run: |
+        cd wallet-service
+        uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+        cd ..
+        cd history-service
+        uvicorn app.main:app --host 0.0.0.0 --port 8002 &
+        cd ..
+        sleep 10 # Give services time to start
+
+    - name: Run tests
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpassword
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        KAFKA_BROKER: localhost:9092
+        WALLET_SERVICE_URL: http://localhost:8001
+        HISTORY_SERVICE_URL: http://localhost:8002
+      run: pytest
